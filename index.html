@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixar Universe — Film Industry Intelligence Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0c0a;
+    --cream: #f5f0e8;
+    --amber: #e8a020;
+    --amber-light: #f5c96a;
+    --red: #c42b1c;
+    --blue: #1a4a8a;
+    --blue-light: #2e6fc4;
+    --green: #1a7a44;
+    --muted: #7a7060;
+    --border: rgba(13,12,10,0.12);
+    --card-bg: rgba(255,255,255,0.7);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid texture background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(13,12,10,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(13,12,10,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ---- HEADER ---- */
+  header {
+    position: relative;
+    padding: 48px 60px 36px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    background: var(--ink);
+    z-index: 10;
+    overflow: hidden;
+  }
+
+  header::after {
+    content: '▲';
+    position: absolute;
+    right: -40px;
+    top: -60px;
+    font-size: 280px;
+    color: rgba(232,160,32,0.08);
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .header-left h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 7vw, 96px);
+    color: var(--cream);
+    letter-spacing: 2px;
+    line-height: 0.92;
+    margin-bottom: 10px;
+  }
+  .header-left h1 span { color: var(--amber); }
+
+  .header-left p {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    color: rgba(245,240,232,0.6);
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .hstat {
+    text-align: right;
+  }
+  .hstat .val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--amber);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .hstat .lbl {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.5);
+    margin-top: 3px;
+  }
+
+  /* ---- MAIN LAYOUT ---- */
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 40px 60px;
+    display: grid;
+    gap: 32px;
+  }
+
+  /* ---- SECTION LABELS ---- */
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ---- CARDS ---- */
+  .card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    padding: 28px 32px;
+    backdrop-filter: blur(4px);
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 4px 4px 0 var(--ink); }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+
+  /* ---- ROW LAYOUTS ---- */
+  .row-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .row-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+  .row-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; }
+
+  @media(max-width: 900px) {
+    main { padding: 24px 20px; }
+    header { padding: 32px 20px 24px; }
+    .row-3, .row-2, .row-2-1, .row-1-2 { grid-template-columns: 1fr; }
+    .hstat { text-align: left; }
+  }
+
+  /* ---- KPI CARDS ---- */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
+  @media(max-width:900px){ .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .kpi {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+    cursor: default;
+  }
+  .kpi:hover { box-shadow: 3px 3px 0 var(--ink); transform: translate(-1px,-1px); }
+  .kpi-accent {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 1.8px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .kpi-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px; line-height: 1;
+    color: var(--ink); letter-spacing: 1px;
+  }
+  .kpi-sub {
+    font-size: 12px; color: var(--muted); margin-top: 6px;
+  }
+
+  /* ---- BAR CHART ---- */
+  .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row { display: grid; grid-template-columns: 130px 1fr 70px; align-items: center; gap: 10px; }
+  .bar-name {
+    font-size: 12px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: var(--ink);
+  }
+  .bar-track {
+    height: 20px; background: rgba(13,12,10,0.06); border-radius: 1px;
+    overflow: hidden; position: relative;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 1px;
+    transition: width 1s cubic-bezier(.4,0,.2,1);
+  }
+  .bar-val { font-size: 12px; font-weight: 600; text-align: right; color: var(--muted); }
+
+  /* ---- SCATTER / BUBBLE ---- */
+  #scatterCanvas { width: 100%; cursor: crosshair; }
+
+  /* ---- TIMELINE ---- */
+  .timeline-wrap { overflow-x: auto; padding-bottom: 8px; }
+  #timelineCanvas { display: block; }
+
+  /* ---- FILM TABLE ---- */
+  .film-table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    text-align: left; padding: 10px 12px;
+    border-bottom: 2px solid var(--ink);
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); cursor: pointer;
+    user-select: none; white-space: nowrap;
+  }
+  thead th:hover { color: var(--ink); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; }
+  tbody tr:hover { background: rgba(232,160,32,0.08); }
+  tbody td { padding: 10px 12px; vertical-align: middle; }
+  .td-film { font-weight: 600; font-size: 13px; }
+  .td-year { color: var(--muted); }
+  .badge {
+    display: inline-block; padding: 2px 7px;
+    border-radius: 2px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .badge-win { background: var(--amber); color: var(--ink); }
+  .badge-nom { background: rgba(26,74,138,0.12); color: var(--blue); }
+  .score-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-weight: 600; font-size: 12px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ---- FILTER BAR ---- */
+  .filter-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 20px;
+  }
+  .filter-btn {
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    border-radius: 2px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--ink); color: var(--cream); border-color: var(--ink);
+  }
+  .search-box {
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    background: rgba(255,255,255,0.6);
+    border-radius: 2px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+    min-width: 180px;
+    transition: border-color 0.15s;
+  }
+  .search-box:focus { border-color: var(--amber); }
+  .search-box::placeholder { color: var(--muted); }
+
+  /* ---- TOOLTIP ---- */
+  #tooltip {
+    position: fixed; pointer-events: none;
+    background: var(--ink); color: var(--cream);
+    border-radius: 2px; padding: 10px 14px;
+    font-size: 12px; line-height: 1.6;
+    max-width: 220px;
+    z-index: 1000;
+    opacity: 0; transition: opacity 0.15s;
+    box-shadow: 3px 3px 0 var(--amber);
+  }
+  #tooltip.show { opacity: 1; }
+  #tooltip strong { color: var(--amber); display: block; margin-bottom: 4px; font-size: 13px; }
+
+  /* ---- ROI COLOR UTIL ---- */
+  .pos { color: var(--green); } .neg { color: var(--red); }
+
+  /* ---- DONUT ---- */
+  #oscarCanvas { display: block; margin: 0 auto; }
+
+  /* ---- DIRECTOR LEADERBOARD ---- */
+  .director-list { display: flex; flex-direction: column; gap: 12px; }
+  .dir-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: rgba(255,255,255,0.5);
+    transition: all 0.15s;
+    cursor: default;
+  }
+  .dir-row:hover { border-color: var(--amber); background: rgba(232,160,32,0.06); }
+  .dir-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; color: var(--amber); width: 28px; flex-shrink: 0;
+  }
+  .dir-info { flex: 1; }
+  .dir-name { font-weight: 600; font-size: 13px; }
+  .dir-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .dir-box { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--blue); }
+
+  /* ---- MINI SPARKLINE ---- */
+  .sparkline { display: inline-block; }
+
+  /* ---- MOVIE DETAIL PANEL ---- */
+  #detailPanel {
+    position: fixed; right: 0; top: 0; bottom: 0;
+    width: 340px; background: var(--ink); color: var(--cream);
+    z-index: 500; padding: 40px 32px;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+    box-shadow: -4px 0 30px rgba(0,0,0,0.3);
+  }
+  #detailPanel.open { transform: translateX(0); }
+  #detailPanel h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px; color: var(--amber); letter-spacing: 1px;
+    line-height: 1; margin-bottom: 6px;
+  }
+  #detailPanel .close-btn {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: 1px solid rgba(245,240,232,0.2);
+    color: var(--cream); cursor: pointer; padding: 4px 10px;
+    font-size: 18px; border-radius: 2px;
+    transition: all 0.15s;
+  }
+  #detailPanel .close-btn:hover { background: var(--amber); color: var(--ink); border-color: var(--amber); }
+  .detail-row {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid rgba(245,240,232,0.08);
+    font-size: 13px;
+  }
+  .detail-key { color: rgba(245,240,232,0.5); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .detail-val { font-weight: 600; }
+  .detail-plot {
+    font-family: 'DM Serif Display', serif; font-style: italic;
+    font-size: 14px; line-height: 1.7;
+    color: rgba(245,240,232,0.7);
+    margin: 16px 0;
+  }
+  .meter-wrap { margin: 4px 0; }
+  .meter-label { display: flex; justify-content: space-between; font-size: 11px; color: rgba(245,240,232,0.5); margin-bottom: 4px; }
+  .meter-track { height: 6px; background: rgba(245,240,232,0.1); border-radius: 3px; overflow: hidden; }
+  .meter-fill { height: 100%; border-radius: 3px; }
+
+  /* ---- FOOTER ---- */
+  footer {
+    text-align: center; padding: 32px;
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 0.5px;
+    border-top: 1px solid var(--border);
+    position: relative; z-index: 1;
+  }
+
+  /* ---- ANIMATION ---- */
+  .fade-in { animation: fadeIn 0.6s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .fade-in-1 { animation-delay: 0.05s; }
+  .fade-in-2 { animation-delay: 0.12s; }
+  .fade-in-3 { animation-delay: 0.2s; }
+  .fade-in-4 { animation-delay: 0.3s; }
+  .fade-in-5 { animation-delay: 0.4s; }
+</style>
+</head>
+<body>
+
+<div id="tooltip"></div>
+
+<!-- DETAIL PANEL -->
+<div id="detailPanel">
+  <button class="close-btn" onclick="closeDetail()">✕</button>
+  <div id="detailContent"></div>
+</div>
+
+<header>
+  <div class="header-left">
+    <h1>PIXAR<br><span>UNIVERSE</span></h1>
+    <p>Film Industry Intelligence — 1995 to 2024</p>
+  </div>
+  <div class="header-stats" id="headerStats"></div>
+</header>
+
+<main>
+
+  <!-- KPIs -->
+  <div class="fade-in fade-in-1">
+    <div class="section-label">Portfolio Overview</div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+  </div>
+
+  <!-- Box Office Timeline + Oscar Donut -->
+  <div class="fade-in fade-in-2">
+    <div class="section-label">Box Office Performance Over Time</div>
+    <div class="row-2-1">
+      <div class="card">
+        <div class="card-title">Worldwide Revenue by Film <span style="font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif;">Click bars for detail</span></div>
+        <div class="timeline-wrap">
+          <canvas id="timelineCanvas" height="220"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Academy Awards</div>
+        <canvas id="oscarCanvas" width="200" height="200"></canvas>
+        <div id="oscarLegend" style="margin-top:16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROI Chart + Director Leaderboard -->
+  <div class="fade-in fade-in-3">
+    <div class="section-label">Return on Investment & Creative Leadership</div>
+    <div class="row-1-2">
+      <div class="card">
+        <div class="card-title">Director Box Office Totals</div>
+        <div class="director-list" id="directorList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">ROI by Film — Top & Bottom <span style="font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif;">(COVID-era films marked)</span></div>
+        <div class="bar-chart" id="roiChart"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scatter: Critical Reception vs Box Office -->
+  <div class="fade-in fade-in-4">
+    <div class="section-label">Critical Reception vs. Commercial Performance</div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:8px;">Rotten Tomatoes Score vs. Worldwide Box Office <span style="font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif;">— bubble size = budget · hover for details · click for film profile</span></div>
+      <canvas id="scatterCanvas" height="360"></canvas>
+    </div>
+  </div>
+
+  <!-- Film Table -->
+  <div class="fade-in fade-in-5">
+    <div class="section-label">Full Film Catalog</div>
+    <div class="card" style="padding:24px 0;">
+      <div class="filter-bar" style="padding:0 28px;">
+        <input class="search-box" id="searchBox" placeholder="Search film…" oninput="renderTable()">
+        <button class="filter-btn active" data-sort="release_year" onclick="setSort('release_year',this)">Year ↓</button>
+        <button class="filter-btn" data-sort="box_office_worldwide" onclick="setSort('box_office_worldwide',this)">Box Office</button>
+        <button class="filter-btn" data-sort="roi" onclick="setSort('roi',this)">ROI</button>
+        <button class="filter-btn" data-sort="imdb_score" onclick="setSort('imdb_score',this)">IMDb</button>
+        <button class="filter-btn" data-sort="oscar_wins" onclick="setSort('oscar_wins',this)">Oscars</button>
+      </div>
+      <div class="film-table-wrap" style="padding:0 0;">
+        <table>
+          <thead>
+            <tr>
+              <th>Film</th>
+              <th>Year</th>
+              <th>Budget</th>
+              <th>Worldwide BO</th>
+              <th>ROI</th>
+              <th>IMDb</th>
+              <th>RT Score</th>
+              <th>Oscars</th>
+            </tr>
+          </thead>
+          <tbody id="filmTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Data sourced from Pixar filmography records · Built for film industry professionals · Pixar Animation Studios
+</footer>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const FILMS = [
+  {"film":"Toy Story","release_year":1995,"budget":30000000,"box_office_worldwide":394436586,"box_office_us_canada":223225679,"box_office_other":171210907,"roi":1214.8,"profit":364436586,"imdb_score":8.3,"rotten_tomatoes_score":100,"oscar_wins":1,"oscar_noms":3,"genres":["Adventure","Animation","Comedy"],"directors":["John Lasseter"],"plot":"A cowboy doll is profoundly threatened and jealous when a new spaceman action figure supplants him as top toy in a boy's bedroom.","cinema_score":"A"},
+  {"film":"A Bug's Life","release_year":1998,"budget":120000000,"box_office_worldwide":363258859,"box_office_us_canada":162798565,"box_office_other":200460294,"roi":202.7,"profit":243258859,"imdb_score":7.2,"rotten_tomatoes_score":92,"oscar_wins":0,"oscar_noms":1,"genres":["Adventure","Animation","Comedy"],"directors":["John Lasseter"],"plot":"A misfit ant, looking for warriors to save his colony from greedy grasshoppers, recruits a group of bugs that turn out to be an inept circus troupe.","cinema_score":"A"},
+  {"film":"Toy Story 2","release_year":1999,"budget":90000000,"box_office_worldwide":511358276,"box_office_us_canada":245852179,"box_office_other":265506097,"roi":468.2,"profit":421358276,"imdb_score":7.9,"rotten_tomatoes_score":100,"oscar_wins":0,"oscar_noms":1,"genres":["Adventure","Animation","Comedy"],"directors":["John Lasseter"],"plot":"When Woody is stolen by a toy collector, Buzz and his friends set out on a rescue mission to save Woody before he becomes a museum toy property.","cinema_score":"A+"},
+  {"film":"Monsters, Inc.","release_year":2001,"budget":115000000,"box_office_worldwide":528773250,"box_office_us_canada":255873250,"box_office_other":272900000,"roi":359.8,"profit":413773250,"imdb_score":8.1,"rotten_tomatoes_score":96,"oscar_wins":1,"oscar_noms":3,"genres":["Adventure","Animation","Comedy"],"directors":["Pete Docter"],"plot":"In order to power the city, monsters have to scare children so that they scream. Two monsters discover the children aren't toxic after all.","cinema_score":"A+"},
+  {"film":"Finding Nemo","release_year":2003,"budget":94000000,"box_office_worldwide":871014978,"box_office_us_canada":339714978,"box_office_other":531300000,"roi":826.6,"profit":777014978,"imdb_score":8.2,"rotten_tomatoes_score":99,"oscar_wins":1,"oscar_noms":3,"genres":["Adventure","Animation","Comedy"],"directors":["Andrew Stanton"],"plot":"After his son is captured in the Great Barrier Reef and taken to Sydney, a timid clownfish sets out on a journey to bring him home.","cinema_score":"A+"},
+  {"film":"The Incredibles","release_year":2004,"budget":92000000,"box_office_worldwide":631442092,"box_office_us_canada":261441092,"box_office_other":370001000,"roi":586.4,"profit":539442092,"imdb_score":8.0,"rotten_tomatoes_score":97,"oscar_wins":2,"oscar_noms":2,"genres":["Action","Adventure","Animation"],"directors":["Brad Bird"],"plot":"A family of undercover superheroes, while trying to live the quiet suburban life, are forced into action to save the world.","cinema_score":"A"},
+  {"film":"Cars","release_year":2006,"budget":120000000,"box_office_worldwide":461983149,"box_office_us_canada":244082982,"box_office_other":217900167,"roi":285.0,"profit":341983149,"imdb_score":7.2,"rotten_tomatoes_score":75,"oscar_wins":0,"oscar_noms":2,"genres":["Adventure","Animation","Comedy"],"directors":["John Lasseter"],"plot":"A hotshot race-car named Lightning McQueen gets waylaid in a forgotten town and learns that life is about the journey, not the finish line.","cinema_score":"A"},
+  {"film":"Ratatouille","release_year":2007,"budget":150000000,"box_office_worldwide":623726085,"box_office_us_canada":206445654,"box_office_other":417280431,"roi":315.8,"profit":473726085,"imdb_score":8.1,"rotten_tomatoes_score":96,"oscar_wins":1,"oscar_noms":4,"genres":["Adventure","Animation","Comedy"],"directors":["Brad Bird"],"plot":"A rat who can cook makes an unlikely alliance with a young kitchen worker at a famous restaurant.","cinema_score":"A"},
+  {"film":"WALL-E","release_year":2008,"budget":180000000,"box_office_worldwide":521311860,"box_office_us_canada":223806889,"box_office_other":297504971,"roi":189.6,"profit":341311860,"imdb_score":8.4,"rotten_tomatoes_score":95,"oscar_wins":1,"oscar_noms":5,"genres":["Adventure","Animation","Family"],"directors":["Andrew Stanton"],"plot":"In the distant future, a small waste-collecting robot inadvertently embarks on a space journey that will ultimately decide the fate of mankind.","cinema_score":"A"},
+  {"film":"Up","release_year":2009,"budget":175000000,"box_office_worldwide":735099082,"box_office_us_canada":293004164,"box_office_other":442094918,"roi":320.1,"profit":560099082,"imdb_score":8.3,"rotten_tomatoes_score":98,"oscar_wins":2,"oscar_noms":3,"genres":["Adventure","Animation","Comedy"],"directors":["Pete Docter"],"plot":"78-year-old Carl Fredricksen tries to fulfill his lifelong dream to see the wilds of South America. He ties thousands of balloons to his house and flies away.","cinema_score":"A"},
+  {"film":"Toy Story 3","release_year":2010,"budget":200000000,"box_office_worldwide":1066969703,"box_office_us_canada":415004880,"box_office_other":651964823,"roi":433.5,"profit":866969703,"imdb_score":8.3,"rotten_tomatoes_score":98,"oscar_wins":2,"oscar_noms":3,"genres":["Adventure","Animation","Comedy"],"directors":["Lee Unkrich"],"plot":"The toys are mistakenly delivered to a day-care center instead of the attic right before Andy leaves for college, and it's up to Woody to convince the other toys that they weren't abandoned.","cinema_score":"A+"},
+  {"film":"Cars 2","release_year":2011,"budget":200000000,"box_office_worldwide":559852396,"box_office_us_canada":191452396,"box_office_other":368400000,"roi":179.9,"profit":359852396,"imdb_score":6.2,"rotten_tomatoes_score":40,"oscar_wins":0,"oscar_noms":0,"genres":["Adventure","Animation","Comedy"],"directors":["John Lasseter"],"plot":"Star race car Lightning McQueen and his pal Mater head overseas to compete in the first-ever World Grand Prix. But the road to the championship becomes rocky.","cinema_score":"A-"},
+  {"film":"Brave","release_year":2012,"budget":185000000,"box_office_worldwide":538983207,"box_office_us_canada":237282182,"box_office_other":301701025,"roi":191.3,"profit":353983207,"imdb_score":7.1,"rotten_tomatoes_score":79,"oscar_wins":1,"oscar_noms":0,"genres":["Action","Adventure","Animation"],"directors":["Mark Andrews"],"plot":"Determined to make her own path in life, Princess Merida defies a custom that brings chaos to her kingdom. Granted one wish, Merida must undo a beastly curse.","cinema_score":"A"},
+  {"film":"Monsters University","release_year":2013,"budget":200000000,"box_office_worldwide":743559607,"box_office_us_canada":268492764,"box_office_other":475066843,"roi":271.8,"profit":543559607,"imdb_score":7.2,"rotten_tomatoes_score":80,"oscar_wins":0,"oscar_noms":0,"genres":["Adventure","Animation","Comedy"],"directors":["Dan Scanlon"],"plot":"A look at the relationship between Mike Wazowski and James P. Sullivan during their days at Monsters University.","cinema_score":"A"},
+  {"film":"Inside Out","release_year":2015,"budget":175000000,"box_office_worldwide":857611174,"box_office_us_canada":356461711,"box_office_other":501149463,"roi":390.1,"profit":682611174,"imdb_score":8.1,"rotten_tomatoes_score":98,"oscar_wins":1,"oscar_noms":1,"genres":["Adventure","Animation","Comedy"],"directors":["Pete Docter"],"plot":"After young Riley is uprooted from her Midwest life and moved to San Francisco, her emotions — Joy, Fear, Anger, Disgust and Sadness — conflict on how best to navigate a new city.","cinema_score":"A+"},
+  {"film":"The Good Dinosaur","release_year":2015,"budget":175000000,"box_office_worldwide":332207671,"box_office_us_canada":123087120,"box_office_other":209120551,"roi":89.8,"profit":157207671,"imdb_score":6.7,"rotten_tomatoes_score":75,"oscar_wins":0,"oscar_noms":0,"genres":["Action","Adventure","Animation"],"directors":["Peter Sohn"],"plot":"In a world where dinosaurs and humans live side-by-side, an Apatosaurus named Arlo makes an unlikely human friend.","cinema_score":"A-"},
+  {"film":"Finding Dory","release_year":2016,"budget":200000000,"box_office_worldwide":1028570889,"box_office_us_canada":486295561,"box_office_other":542275328,"roi":414.3,"profit":828570889,"imdb_score":7.2,"rotten_tomatoes_score":94,"oscar_wins":0,"oscar_noms":0,"genres":["Adventure","Animation","Comedy"],"directors":["Andrew Stanton"],"plot":"The friendly-but-forgetful blue tang fish begins a search for her long-lost parents, and everyone learns a few things about the real meaning of family.","cinema_score":"A"},
+  {"film":"Cars 3","release_year":2017,"budget":175000000,"box_office_worldwide":383930656,"box_office_us_canada":152901036,"box_office_other":231029620,"roi":119.4,"profit":208930656,"imdb_score":6.7,"rotten_tomatoes_score":69,"oscar_wins":0,"oscar_noms":0,"genres":["Adventure","Animation","Comedy"],"directors":["Brian Fee"],"plot":"Blindsided by a new generation of blazing-fast racers, the legendary Lightning McQueen is suddenly sidelined and must decide what his future holds.","cinema_score":"A-"},
+  {"film":"Coco","release_year":2017,"budget":175000000,"box_office_worldwide":814641172,"box_office_us_canada":209726015,"box_office_other":604915157,"roi":365.5,"profit":639641172,"imdb_score":8.4,"rotten_tomatoes_score":97,"oscar_wins":2,"oscar_noms":0,"genres":["Adventure","Animation","Drama"],"directors":["Lee Unkrich"],"plot":"Aspiring musician Miguel, confronted with his family's ban on music, enters the Land of the Dead to find his great-great-grandfather, a legendary singer.","cinema_score":"A+"},
+  {"film":"Incredibles 2","release_year":2018,"budget":200000000,"box_office_worldwide":1242805359,"box_office_us_canada":608581744,"box_office_other":634223615,"roi":521.4,"profit":1042805359,"imdb_score":7.5,"rotten_tomatoes_score":93,"oscar_wins":0,"oscar_noms":1,"genres":["Action","Adventure","Animation"],"directors":["Brad Bird"],"plot":"The Incredibles family take on a new mission which involves a change in family roles: Bob Parr must manage the house while his wife Helen goes out to save the world.","cinema_score":"A"},
+  {"film":"Toy Story 4","release_year":2019,"budget":200000000,"box_office_worldwide":1073394593,"box_office_us_canada":434038008,"box_office_other":639356585,"roi":436.7,"profit":873394593,"imdb_score":7.6,"rotten_tomatoes_score":97,"oscar_wins":1,"oscar_noms":1,"genres":["Adventure","Animation","Comedy"],"directors":["Josh Cooley"],"plot":"Woody, Buzz Lightyear and the rest of the gang embark on a road trip with Bonnie and a new toy named Forky. The adventurous journey turns into an unexpected reunion.","cinema_score":"A"},
+  {"film":"Onward","release_year":2020,"budget":175000000,"box_office_worldwide":141940042,"box_office_us_canada":61555145,"box_office_other":80384897,"roi":-18.9,"profit":-33059958,"imdb_score":7.4,"rotten_tomatoes_score":88,"oscar_wins":0,"oscar_noms":1,"genres":["Adventure","Animation","Comedy"],"directors":["Dan Scanlon"],"plot":"Two teenage elf brothers go on an extraordinary quest to discover if there is still a little magic left out there. Released during COVID-19 pandemic.","cinema_score":"A-","covid":true},
+  {"film":"Soul","release_year":2020,"budget":150000000,"box_office_worldwide":121903885,"box_office_us_canada":13279678,"box_office_other":108624207,"roi":-18.7,"profit":-28096115,"imdb_score":8.0,"rotten_tomatoes_score":95,"oscar_wins":2,"oscar_noms":2,"genres":["Adventure","Animation","Comedy"],"directors":["Pete Docter"],"plot":"After landing the gig of his life, a New York jazz musician suddenly finds himself in a fantastical place between Earth and the afterlife. Disney+ release during COVID.","cinema_score":"A","covid":true},
+  {"film":"Luca","release_year":2021,"budget":null,"box_office_worldwide":51112314,"box_office_us_canada":null,"box_office_other":null,"roi":null,"profit":null,"imdb_score":7.4,"rotten_tomatoes_score":91,"oscar_wins":0,"oscar_noms":1,"genres":["Adventure","Animation","Comedy"],"directors":["Jesse Andrews"],"plot":"A young boy living on the Italian Riviera has a transformative summer adventure. He and his best friend discover a shared secret — they are sea monsters from another world.","cinema_score":"A-","streaming":true},
+  {"film":"Turning Red","release_year":2022,"budget":175000000,"box_office_worldwide":21813358,"box_office_us_canada":null,"box_office_other":null,"roi":-87.5,"profit":-153186642,"imdb_score":7.0,"rotten_tomatoes_score":95,"oscar_wins":0,"oscar_noms":1,"genres":["Adventure","Animation","Comedy"],"directors":["Domee Shi"],"plot":"A 13-year-old girl discovers that whenever she gets too excited, she transforms into a giant red panda. Primarily a Disney+ release.","cinema_score":"A","streaming":true},
+  {"film":"Lightyear","release_year":2022,"budget":200000000,"box_office_worldwide":226425420,"box_office_us_canada":118276778,"box_office_other":108148642,"roi":13.2,"profit":26425420,"imdb_score":6.1,"rotten_tomatoes_score":74,"oscar_wins":0,"oscar_noms":0,"genres":["Action","Adventure","Animation"],"directors":["Angus MacLane"],"plot":"The origin story of Buzz Lightyear, the hero who inspired the toy. Legendary Space Ranger Buzz Lightyear embarks on an intergalactic adventure.","cinema_score":"A-"},
+  {"film":"Elemental","release_year":2023,"budget":200000000,"box_office_worldwide":496444308,"box_office_us_canada":155264000,"box_office_other":341180308,"roi":148.2,"profit":296444308,"imdb_score":7.0,"rotten_tomatoes_score":73,"oscar_wins":0,"oscar_noms":1,"genres":["Adventure","Animation","Comedy"],"directors":["Peter Sohn"],"plot":"Follows Ember and Wade, in a city where fire, water, land and air residents live together. The two discover something elemental: how much they actually have in common.","cinema_score":"A-"},
+  {"film":"Inside Out 2","release_year":2024,"budget":200000000,"box_office_worldwide":1698030965,"box_office_us_canada":652985986,"box_office_other":1045044979,"roi":749.0,"profit":1498030965,"imdb_score":7.6,"rotten_tomatoes_score":90,"oscar_wins":0,"oscar_noms":1,"genres":["Adventure","Animation","Comedy"],"directors":["Kelsey Mann"],"plot":"Teenager Riley's mind headquarters is thrown into turmoil when Anxiety shows up unexpectedly. Joy and the other Emotions must work together to manage this new emotion.","cinema_score":"A"}
+];
+
+// ============================================================
+// UTILITIES
+// ============================================================
+const fmt = n => n == null ? '—' : n >= 1e9 ? '$' + (n/1e9).toFixed(2) + 'B' : n >= 1e6 ? '$' + (n/1e6).toFixed(0) + 'M' : '$' + n.toLocaleString();
+const fmtM = n => n == null ? '—' : '$' + (n/1e6).toFixed(0) + 'M';
+const pct = n => n == null ? '—' : (n > 0 ? '+' : '') + n.toFixed(1) + '%';
+const clr = n => n == null ? '' : n > 0 ? 'pos' : 'neg';
+
+function scoreColor(v, max) {
+  // green → amber → red
+  const t = v / max;
+  if (t > 0.75) return '#1a7a44';
+  if (t > 0.5) return '#e8a020';
+  return '#c42b1c';
+}
+
+// Tooltip
+const tip = document.getElementById('tooltip');
+function showTip(e, html) {
+  tip.innerHTML = html;
+  tip.classList.add('show');
+  moveTip(e);
+}
+function moveTip(e) {
+  const x = e.clientX + 14, y = e.clientY - 8;
+  tip.style.left = Math.min(x, window.innerWidth - 240) + 'px';
+  tip.style.top = Math.min(y, window.innerHeight - 100) + 'px';
+}
+function hideTip() { tip.classList.remove('show'); }
+
+// ============================================================
+// HEADER STATS
+// ============================================================
+function renderHeader() {
+  const totalBO = FILMS.reduce((s,f) => s + (f.box_office_worldwide||0), 0);
+  const avgROI = FILMS.filter(f=>f.roi!=null).reduce((s,f)=>s+f.roi,0) / FILMS.filter(f=>f.roi!=null).length;
+  const wins = FILMS.reduce((s,f)=>s+f.oscar_wins,0);
+  const avgIMDb = (FILMS.reduce((s,f)=>s+f.imdb_score,0)/FILMS.length).toFixed(1);
+  document.getElementById('headerStats').innerHTML = `
+    <div class="hstat"><div class="val">${fmt(totalBO)}</div><div class="lbl">Total Worldwide BO</div></div>
+    <div class="hstat"><div class="val">${avgROI.toFixed(0)}%</div><div class="lbl">Avg ROI</div></div>
+    <div class="hstat"><div class="val">${wins}</div><div class="lbl">Oscar Wins</div></div>
+    <div class="hstat"><div class="val">${avgIMDb}</div><div class="lbl">Avg IMDb Score</div></div>
+  `;
+}
+
+// ============================================================
+// KPI CARDS
+// ============================================================
+function renderKPIs() {
+  const theatrical = FILMS.filter(f => !f.streaming);
+  const profitable = FILMS.filter(f => f.roi != null && f.roi > 0);
+  const best = FILMS.filter(f=>f.roi!=null).sort((a,b)=>b.roi-a.roi)[0];
+  const topBO = FILMS.sort((a,b)=>b.box_office_worldwide-a.box_office_worldwide)[0];
+  const avgBudget = FILMS.filter(f=>f.budget!=null).reduce((s,f)=>s+f.budget,0)/FILMS.filter(f=>f.budget!=null).length;
+  
+  const kpis = [
+    { label: 'Films Released', value: '28', sub: '1995 – 2024', accent: '#e8a020' },
+    { label: 'Profitable Releases', value: profitable.length + '/26', sub: 'With known budget data', accent: '#1a7a44' },
+    { label: 'Highest ROI Ever', value: best.roi.toFixed(0) + '%', sub: best.film + ' (' + best.release_year + ')', accent: '#c42b1c' },
+    { label: 'All-time #1 Film', value: fmtM(topBO.box_office_worldwide), sub: topBO.film, accent: '#1a4a8a' },
+  ];
+
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
+    <div class="kpi">
+      <div class="kpi-accent" style="background:${k.accent}"></div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// TIMELINE CANVAS
+// ============================================================
+function renderTimeline() {
+  const canvas = document.getElementById('timelineCanvas');
+  const wrap = canvas.parentElement;
+  const W = Math.max(wrap.clientWidth, FILMS.length * 38);
+  canvas.width = W;
+  const H = 220;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { l: 10, r: 10, t: 10, b: 40 };
+  const maxBO = Math.max(...FILMS.map(f=>f.box_office_worldwide));
+  const barW = (W - pad.l - pad.r) / FILMS.length;
+
+  FILMS.forEach((f, i) => {
+    const x = pad.l + i * barW;
+    const barH = (f.box_office_worldwide / maxBO) * (H - pad.t - pad.b);
+    const y = H - pad.b - barH;
+    const roi = f.roi;
+    const isCovid = f.covid || f.streaming;
+
+    // color by performance
+    let fill;
+    if (f.box_office_worldwide >= 1e9) fill = '#e8a020';
+    else if (isCovid) fill = 'rgba(196,43,28,0.6)';
+    else fill = '#1a4a8a';
+
+    ctx.fillStyle = fill;
+    ctx.fillRect(x + 2, y, barW - 4, barH);
+
+    // year label
+    ctx.fillStyle = '#7a7060';
+    ctx.font = '9px DM Sans, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(f.release_year.toString().slice(2), x + barW/2, H - pad.b + 14);
+
+    // film name rotated
+    ctx.save();
+    ctx.translate(x + barW/2, H - pad.b + 26);
+    ctx.rotate(-Math.PI/4);
+    ctx.textAlign = 'right';
+    ctx.font = '9px DM Sans, sans-serif';
+    ctx.fillStyle = '#7a7060';
+    ctx.fillText(f.film.length > 12 ? f.film.slice(0,11)+'…' : f.film, 0, 0);
+    ctx.restore();
+  });
+
+  // Legend
+  ctx.font = '10px DM Sans';
+  ctx.fillStyle = '#e8a020';
+  ctx.fillRect(pad.l, 4, 10, 10);
+  ctx.fillStyle = '#0d0c0a';
+  ctx.textAlign = 'left';
+  ctx.fillText('$1B+ Blockbuster', pad.l + 14, 13);
+  ctx.fillStyle = '#1a4a8a';
+  ctx.fillRect(pad.l + 130, 4, 10, 10);
+  ctx.fillStyle = '#0d0c0a';
+  ctx.fillText('Theatrical', pad.l + 144, 13);
+  ctx.fillStyle = 'rgba(196,43,28,0.7)';
+  ctx.fillRect(pad.l + 220, 4, 10, 10);
+  ctx.fillStyle = '#0d0c0a';
+  ctx.fillText('COVID / Streaming', pad.l + 234, 13);
+
+  // Click handler
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const i = Math.floor((mx - pad.l) / barW);
+    if (i >= 0 && i < FILMS.length) {
+      const f = FILMS[i];
+      showTip(e, `<strong>${f.film}</strong>${f.release_year}<br>Box Office: ${fmt(f.box_office_worldwide)}<br>Budget: ${fmtM(f.budget)}<br>ROI: ${pct(f.roi)}<br>RT: ${f.rotten_tomatoes_score}%`);
+    } else hideTip();
+  };
+  canvas.onmouseleave = hideTip;
+  canvas.onclick = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const i = Math.floor((mx - pad.l) / barW);
+    if (i >= 0 && i < FILMS.length) openDetail(FILMS[i]);
+  };
+}
+
+// ============================================================
+// OSCAR DONUT
+// ============================================================
+function renderOscars() {
+  const wins = FILMS.reduce((s,f)=>s+f.oscar_wins,0);
+  const noms = FILMS.reduce((s,f)=>s+f.oscar_noms,0);
+  const total = 89; // total entries
+  const noAward = total - wins - noms;
+
+  const canvas = document.getElementById('oscarCanvas');
+  const ctx = canvas.getContext('2d');
+  const cx = 100, cy = 100, r = 80, innerR = 48;
+
+  const segments = [
+    { val: wins, color: '#e8a020', label: 'Wins' },
+    { val: noms, color: '#1a4a8a', label: 'Nominated' },
+    { val: noAward, color: 'rgba(13,12,10,0.08)', label: 'Ineligible / None' },
+  ];
+
+  const sum = segments.reduce((s,sg)=>s+sg.val,0);
+  let angle = -Math.PI/2;
+
+  segments.forEach(sg => {
+    const sweep = (sg.val / sum) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, angle + sweep);
+    ctx.closePath();
+    ctx.fillStyle = sg.color;
+    ctx.fill();
+    angle += sweep;
+  });
+
+  // Inner hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, innerR, 0, 2*Math.PI);
+  ctx.fillStyle = '#f5f0e8';
+  ctx.fill();
+
+  // Center text
+  ctx.fillStyle = '#e8a020';
+  ctx.font = 'bold 28px Bebas Neue, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(wins, cx, cy + 4);
+  ctx.fillStyle = '#7a7060';
+  ctx.font = '9px DM Sans, sans-serif';
+  ctx.fillText('OSCAR WINS', cx, cy + 18);
+
+  // Legend
+  document.getElementById('oscarLegend').innerHTML = segments.map(sg => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;">
+      <div style="width:12px;height:12px;border-radius:2px;background:${sg.color};flex-shrink:0;"></div>
+      <span style="color:var(--muted);">${sg.label}</span>
+      <span style="font-weight:700;margin-left:auto;">${sg.val}</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// ROI CHART
+// ============================================================
+function renderROI() {
+  const sorted = [...FILMS].filter(f=>f.roi!=null).sort((a,b)=>b.roi-a.roi);
+  const top5 = sorted.slice(0,5);
+  const bottom5 = sorted.slice(-5).reverse();
+  const display = [...top5, null, ...bottom5];
+
+  const maxROI = Math.max(...sorted.map(f=>Math.abs(f.roi)));
+
+  document.getElementById('roiChart').innerHTML = display.map((f,i) => {
+    if (!f) return `<div style="height:1px;background:var(--border);margin:6px 0;"></div>`;
+    const isPos = f.roi > 0;
+    const width = Math.abs(f.roi) / maxROI * 100;
+    const col = isPos ? '#1a7a44' : '#c42b1c';
+    const covid = f.covid || f.streaming ? ' <span style="font-size:9px;color:var(--muted);font-weight:400;">[COVID/Stream]</span>' : '';
+    return `
+      <div class="bar-row" title="${f.film}">
+        <div class="bar-name">${f.film}${covid}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${width}%;background:${col};"></div>
+        </div>
+        <div class="bar-val" style="color:${col};">${pct(f.roi)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+// DIRECTOR LEADERBOARD
+// ============================================================
+function renderDirectors() {
+  const dirMap = {};
+  FILMS.forEach(f => {
+    const d = f.directors[0];
+    if (!dirMap[d]) dirMap[d] = { films: 0, box: 0, wins: 0, imdb: [] };
+    dirMap[d].films++;
+    dirMap[d].box += f.box_office_worldwide || 0;
+    dirMap[d].wins += f.oscar_wins;
+    dirMap[d].imdb.push(f.imdb_score);
+  });
+
+  const dirs = Object.entries(dirMap)
+    .map(([name,d]) => ({ name, ...d, avgIMDb: (d.imdb.reduce((s,v)=>s+v,0)/d.imdb.length).toFixed(1) }))
+    .sort((a,b) => b.box - a.box)
+    .slice(0, 7);
+
+  document.getElementById('directorList').innerHTML = dirs.map((d,i) => `
+    <div class="dir-row">
+      <div class="dir-rank">${i+1}</div>
+      <div class="dir-info">
+        <div class="dir-name">${d.name}</div>
+        <div class="dir-meta">${d.films} film${d.films>1?'s':''} · ${d.wins} Oscar win${d.wins!==1?'s':''} · IMDb ${d.avgIMDb}</div>
+      </div>
+      <div class="dir-box">${fmtM(d.box)}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// SCATTER CHART
+// ============================================================
+function renderScatter() {
+  const canvas = document.getElementById('scatterCanvas');
+  const W = canvas.parentElement.clientWidth;
+  canvas.width = W;
+  const H = 360;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { l: 60, r: 20, t: 20, b: 50 };
+  const maxBO = Math.max(...FILMS.map(f=>f.box_office_worldwide));
+  const maxBudget = 200000000;
+
+  const toX = rt => pad.l + (rt / 100) * (W - pad.l - pad.r);
+  const toY = bo => pad.t + (1 - bo / maxBO) * (H - pad.t - pad.b);
+  const toR = budget => budget == null ? 10 : 6 + (budget / maxBudget) * 22;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(13,12,10,0.06)';
+  ctx.lineWidth = 1;
+  [0,25,50,75,100].forEach(v => {
+    const x = toX(v);
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+    ctx.fillStyle = '#7a7060'; ctx.font = '10px DM Sans'; ctx.textAlign = 'center';
+    ctx.fillText(v + '%', x, H - pad.b + 16);
+  });
+  [0, 500e6, 1e9, 1.5e9].forEach(v => {
+    const y = toY(v);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    ctx.fillStyle = '#7a7060'; ctx.textAlign = 'right';
+    ctx.fillText(fmt(v), pad.l - 6, y + 4);
+  });
+
+  // Axis labels
+  ctx.fillStyle = '#7a7060'; ctx.font = '11px DM Sans';
+  ctx.textAlign = 'center';
+  ctx.fillText('Rotten Tomatoes Score →', W/2, H - 6);
+  ctx.save(); ctx.translate(14, H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Worldwide Box Office →', 0, 0); ctx.restore();
+
+  // Dots
+  const hovered = { idx: -1 };
+  FILMS.forEach((f, i) => {
+    const x = toX(f.rotten_tomatoes_score);
+    const y = toY(f.box_office_worldwide);
+    const r = toR(f.budget);
+    const isBig = f.box_office_worldwide >= 1e9;
+
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 2*Math.PI);
+    ctx.fillStyle = isBig ? 'rgba(232,160,32,0.8)' : (f.covid||f.streaming) ? 'rgba(196,43,28,0.6)' : 'rgba(26,74,138,0.65)';
+    ctx.fill();
+    ctx.strokeStyle = isBig ? '#e8a020' : (f.covid||f.streaming) ? '#c42b1c' : '#1a4a8a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Label top films
+    if (f.box_office_worldwide >= 800e6) {
+      ctx.fillStyle = '#0d0c0a';
+      ctx.font = 'bold 10px DM Sans';
+      ctx.textAlign = 'center';
+      ctx.fillText(f.film.split(' ')[0] + (f.film.includes(' ') ? ' '+f.film.split(' ')[1] : ''), x, y - r - 4);
+    }
+  });
+
+  // Interaction
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const my = (e.clientY - rect.top) * (H / rect.height);
+    let found = null;
+    FILMS.forEach(f => {
+      const x = toX(f.rotten_tomatoes_score);
+      const y = toY(f.box_office_worldwide);
+      const r = toR(f.budget) + 4;
+      if (Math.hypot(mx - x, my - y) < r) found = f;
+    });
+    if (found) {
+      showTip(e, `<strong>${found.film} (${found.release_year})</strong>RT: ${found.rotten_tomatoes_score}% · IMDb: ${found.imdb_score}<br>Box Office: ${fmt(found.box_office_worldwide)}<br>Budget: ${fmtM(found.budget)}<br>ROI: ${pct(found.roi)}<br>Oscars: ${found.oscar_wins} win${found.oscar_wins!==1?'s':''}`);
+      canvas.style.cursor = 'pointer';
+    } else {
+      hideTip();
+      canvas.style.cursor = 'crosshair';
+    }
+  };
+  canvas.onmouseleave = hideTip;
+  canvas.onclick = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const my = (e.clientY - rect.top) * (H / rect.height);
+    FILMS.forEach(f => {
+      const x = toX(f.rotten_tomatoes_score);
+      const y = toY(f.box_office_worldwide);
+      const r = toR(f.budget) + 4;
+      if (Math.hypot(mx - x, my - y) < r) openDetail(f);
+    });
+  };
+}
+
+// ============================================================
+// FILM TABLE
+// ============================================================
+let currentSort = 'release_year';
+let currentDir = 1;
+
+function setSort(key, btn) {
+  if (currentSort === key) currentDir *= -1;
+  else { currentSort = key; currentDir = 1; }
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+function renderTable() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  let data = FILMS.filter(f => f.film.toLowerCase().includes(q));
+  data = data.sort((a,b) => {
+    const av = a[currentSort], bv = b[currentSort];
+    if (av == null) return 1; if (bv == null) return -1;
+    return (bv - av) * currentDir;
+  });
+
+  document.getElementById('filmTableBody').innerHTML = data.map(f => `
+    <tr onclick="openDetail(FILMS.find(x=>x.film==='${f.film.replace(/'/g,"\\'")}'))">
+      <td class="td-film">${f.film}${f.covid ? ' <span style="font-size:10px;color:var(--red);">COVID</span>' : ''}${f.streaming ? ' <span style="font-size:10px;color:var(--muted);">Stream</span>' : ''}</td>
+      <td class="td-year">${f.release_year}</td>
+      <td>${fmtM(f.budget)}</td>
+      <td><strong>${fmtM(f.box_office_worldwide)}</strong></td>
+      <td class="${clr(f.roi)}" style="font-weight:600;">${pct(f.roi)}</td>
+      <td>
+        <div class="score-pill">
+          <div class="dot" style="background:${scoreColor(f.imdb_score,10)};"></div>
+          ${f.imdb_score}
+        </div>
+      </td>
+      <td>
+        <div class="score-pill">
+          <div class="dot" style="background:${scoreColor(f.rotten_tomatoes_score,100)};"></div>
+          ${f.rotten_tomatoes_score}%
+        </div>
+      </td>
+      <td>
+        ${f.oscar_wins > 0 ? `<span class="badge badge-win">🏆 ${f.oscar_wins} Win${f.oscar_wins>1?'s':''}</span>` : ''}
+        ${f.oscar_noms > 0 ? `<span class="badge badge-nom">${f.oscar_noms} Nom</span>` : ''}
+        ${f.oscar_wins === 0 && f.oscar_noms === 0 ? '<span style="color:var(--muted);font-size:11px;">—</span>' : ''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// DETAIL PANEL
+// ============================================================
+function openDetail(f) {
+  const panel = document.getElementById('detailPanel');
+  const content = document.getElementById('detailContent');
+
+  const covidNote = f.covid ? '<div style="background:rgba(196,43,28,0.15);border-left:3px solid #c42b1c;padding:8px 12px;font-size:11px;color:#c42b1c;margin-bottom:16px;">⚠ Released during COVID-19 pandemic — theatrical revenue significantly impacted.</div>' : '';
+  const streamNote = f.streaming ? '<div style="background:rgba(26,74,138,0.1);border-left:3px solid #1a4a8a;padding:8px 12px;font-size:11px;color:#2e6fc4;margin-bottom:16px;">📺 Primarily released on Disney+ streaming — minimal theatrical revenue recorded.</div>' : '';
+
+  content.innerHTML = `
+    <h2>${f.film}</h2>
+    <div style="color:rgba(245,240,232,0.4);font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">${f.release_year} · ${f.genres ? f.genres.join(', ') : ''}</div>
+    ${covidNote}${streamNote}
+    <p class="detail-plot">"${f.plot}"</p>
+    <div class="detail-row"><span class="detail-key">Director</span><span class="detail-val">${f.directors.join(', ')}</span></div>
+    <div class="detail-row"><span class="detail-key">Budget</span><span class="detail-val">${fmtM(f.budget)}</span></div>
+    <div class="detail-row"><span class="detail-key">Worldwide Box Office</span><span class="detail-val">${fmt(f.box_office_worldwide)}</span></div>
+    <div class="detail-row"><span class="detail-key">Profit</span><span class="detail-val" style="color:${f.profit > 0 ? '#1a7a44' : '#c42b1c'};">${fmt(f.profit)}</span></div>
+    <div class="detail-row"><span class="detail-key">ROI</span><span class="detail-val" style="color:${(f.roi||0) > 0 ? '#1a7a44' : '#c42b1c'};">${pct(f.roi)}</span></div>
+    <div class="detail-row"><span class="detail-key">Cinema Score</span><span class="detail-val">${f.cinema_score || '—'}</span></div>
+    <div style="margin-top:20px;"></div>
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,232,0.4);margin-bottom:12px;">Critical Reception</div>
+    <div class="meter-wrap">
+      <div class="meter-label"><span>IMDb Score</span><span style="color:var(--amber);font-weight:700;">${f.imdb_score}/10</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:${f.imdb_score*10}%;background:#e8a020;"></div></div>
+    </div>
+    <div class="meter-wrap" style="margin-top:10px;">
+      <div class="meter-label"><span>Rotten Tomatoes</span><span style="color:#e8571a;font-weight:700;">${f.rotten_tomatoes_score}%</span></div>
+      <div class="meter-track"><div class="meter-fill" style="width:${f.rotten_tomatoes_score}%;background:#e8571a;"></div></div>
+    </div>
+    <div style="margin-top:20px;"></div>
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,232,0.4);margin-bottom:12px;">Academy Awards</div>
+    <div class="detail-row"><span class="detail-key">Oscar Wins</span><span class="detail-val" style="color:var(--amber);">${f.oscar_wins} 🏆</span></div>
+    <div class="detail-row"><span class="detail-key">Nominations</span><span class="detail-val">${f.oscar_noms}</span></div>
+  `;
+
+  panel.classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  renderHeader();
+  renderKPIs();
+  renderTimeline();
+  renderOscars();
+  renderROI();
+  renderDirectors();
+  renderScatter();
+  renderTable();
+}
+
+window.addEventListener('load', init);
+window.addEventListener('resize', () => {
+  renderTimeline();
+  renderScatter();
+});
+</script>
+</body>
+</html>

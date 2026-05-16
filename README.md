@@ -1,0 +1,1 @@
+Pixar Film Intelligence Dashboard — an interactive data storytelling project analyzing Pixar films through financial performance, audience reception, awards, and creative leadership to understand the drivers behind commercial and critical success. Built as an experiment in AI-assisted analytics and dashboard design.
